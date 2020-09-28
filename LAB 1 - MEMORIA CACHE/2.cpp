@@ -43,7 +43,7 @@ int main (int argc, char *argv[]) {
     Generar_matriz(B,FB,CB);
     
     t0 = clock();
-    multipliCAcion(A,FA,CA,B,FB,CB,C);
+    multiplicacion(A,FA,CA,B,FB,CB,C);
     t1 = clock();
     double Time = (double(t1-t0)/CLOCKS_PER_SEC);
     cout << "Execution Time: " << Time << endl;
