@@ -12,8 +12,10 @@ double Trap(double left_endpt,double right_endpt,int trap_count,double base_len)
 
 
 int main(void){
-	int my_rank, comm_sz, n=1024, local_n;
-	double a=0.0, b=3.0, h, local_a, local_b;
+	//int my_rank, comm_sz, n=1024, local_n;
+	//double a=0.0, b=3.0, h, local_a, local_b;
+	int my_rank, comm_sz, n, local_n;
+	double a, b, h, local_a, local_b;
 	double local_int, total_int;
 	int source;
 
@@ -22,7 +24,6 @@ int main(void){
 	MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
 
 	GetInput(my_rank, comm_sz, &a, &b, &n);		
-
 	h = (b-a)/n;		 // h is the same for all processes 				
 	local_n = n/comm_sz; // So is the number of trapezoids 				
 
@@ -54,6 +55,30 @@ int main(void){
 	return 0;
 }
 
+void GetInput(
+	int my_rank, 	/*in*/
+	int comm_sz, 	/*in*/								
+	double* a_p, 	/*out*/
+	double* b_p,	/*out*/
+	int* n_p		/*out*/){
+	int dest;
+
+	if(my_rank == 0){					
+		printf("Enter a, b, and n\n");
+		scanf("%lf %lf %d", a_p, b_p, n_p);
+		for(dest = 1; dest < comm_sz; dest++){							
+			MPI_Send(a_p,1,MPI_DOUBLE,dest,0,MPI_COMM_WORLD);
+			MPI_Send(b_p,1,MPI_DOUBLE,dest,0,MPI_COMM_WORLD);
+			MPI_Send(n_p,1,MPI_INT,dest,0,MPI_COMM_WORLD);
+		}
+	}
+	else{ /* my rank != 0 */
+		MPI_Recv(a_p,1,MPI_DOUBLE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Recv(b_p,1,MPI_DOUBLE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Recv(n_p,1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);		
+	}
+}
+
 double f(double x){
 	return 2 * x + 1;
 }
@@ -62,8 +87,7 @@ double Trap(
 	double left_endpt	/*in*/,
 	double right_endpt	/*in*/,
 	int trap_count 		/*in*/,	
-	double base_len		/*in*/)
-{
+	double base_len		/*in*/){
 
 	double estimate,x;
 	int i;
@@ -80,26 +104,3 @@ double Trap(
 } /* Trap */
 
 
-void GetInput(
-	int my_rank, 	/*in*/
-	int comm_sz, 	/*in*/								
-	double* a_p, 	/*out*/
-	double* b_p,	/*out*/
-	int* n_p		/*out*/){
-	int dest;
-
-	if(my_rank == 0){					
-		printf("Enter a, b, and n\n");
-		scanf("%lf %lf %d", a_p, b_p, n_p);
-
-		for(dest = 1; dest < comm_sz; dest++){								
-			MPI_Send(a_p,1,MPI_DOUBLE,dest,0,MPI_COMM_WORLD);
-			MPI_Send(b_p,1,MPI_DOUBLE,dest,0,MPI_COMM_WORLD);
-			MPI_Send(n_p,1,MPI_INT,dest,0,MPI_COMM_WORLD);
-		}
-	}
-	else{ /* my rank != 0 */
-		MPI_Recv(a_p,1,MPI_DOUBLE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-		MPI_Recv(b_p,1,MPI_DOUBLE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-	}	MPI_Recv(n_p,1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);		
-}
